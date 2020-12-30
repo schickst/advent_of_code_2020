@@ -80,6 +80,82 @@ impl Passport {
         }
         true
     }
+
+    fn verify(&self) -> bool {
+        let birth_year = self.byr.clone().unwrap().parse::<u32>().unwrap();
+        if birth_year < 1920 || birth_year > 2002 {
+            println!("Birth year invalid");
+            return false;
+        }
+
+        let issuer_year = self.iyr.clone().unwrap().parse::<u32>().unwrap();
+        if issuer_year < 2010 || issuer_year > 2020 {
+            println!("Issuer year invalid");
+            return false;
+        }
+
+        let expiration_year = self.eyr.clone().unwrap().parse::<u32>().unwrap();
+        if expiration_year < 2020 || expiration_year > 2030 {
+            println!("Expiration year invalid");
+            return false;
+        }
+
+        let mut height = self.hgt.clone().unwrap();
+        if !height.ends_with("cm") && !height.ends_with("in") {
+            println!("Height unit invalid");
+            return false;
+        }
+
+        if height.ends_with("cm") {
+            height = height.trim_end_matches("cm").to_string();
+            let cms = height.parse::<u32>().unwrap();
+
+            if cms < 150 || cms > 193 {
+                println!("{}", cms);
+                println!("Height cm invalid");
+                return false;
+            }
+        }
+
+        if height.ends_with("in") {
+            height = height.trim_end_matches("in").to_string();
+            let ins = height.parse::<u32>().unwrap();
+
+            if ins < 59 || ins > 76 {
+                println!("{}", ins);
+                println!("Height in invalid");
+                return false;
+            }
+        }
+
+        let hair_color = self.hcl.clone().unwrap();
+        if hair_color.len() != 7 || !hair_color.starts_with("#") {
+            println!("Hair color invalid");
+            return false;
+        }
+        let valid_characters = "0123456789abcdef";
+        for c in 1..hair_color.len() {
+            if !valid_characters.contains(hair_color.chars().nth(c).unwrap()) {
+                println!("Hair color invalid");
+                return false;
+            }
+        }
+
+        let eye_color = self.ecl.clone().unwrap();
+        let valid_eye_colors = vec!["amb", "blu", "brn", "gry", "grn", "hzl", "oth"];
+        if !valid_eye_colors.iter().any(|&e| e == &eye_color) {
+            println!("Eye color invalid");
+            return false;
+        }
+
+        for c in self.pid.clone().unwrap().chars() {
+            if !c.is_digit(10) {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 
@@ -108,16 +184,30 @@ pub fn run_day_four() {
         }
     }
 
+    part_one(&passports);
+    part_two(&passports);
+}
+
+fn part_one(passports: &Vec<Passport>) {
     let mut valid_passports = 0;
 
     for passport in passports {
         if passport.is_valid() {
             valid_passports = valid_passports + 1;
         }
-        else {
-            println!("{:?}", passport);
-        }
     }
     println!("Result: {}", valid_passports);
+}
+
+
+fn part_two(passports: &Vec<Passport>) {
+    let mut valid_passports = 0;
+
+    for passport in passports {
+        if passport.is_valid() && passport.verify() {
+            valid_passports = valid_passports + 1;
+        }
+    }
+    println!("Result: {}", valid_passports); // Should be below 125
 }
 
